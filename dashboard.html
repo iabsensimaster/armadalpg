@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard i-operasional</title>
+  <link rel="icon" type="image/png" href="pertamina-logoicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-cyan-100 to-blue-200 min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative text-center">
+    <!-- Tombol Logout -->
+    <button class="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm shadow" onclick="logout()">Logout</button>
+
+    <!-- Header -->
+    <img src="pertamina-logoicon.png" alt="Logo Pertamina" class="w-45 mx-auto mb-4">
+    <div class="pt-name text-blue-1000 font-semibold mb-6" id="ptName">-</div>
+    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+
+    <!-- Tombol Navigasi -->
+    <div class="space-y-3 mb-6">
+      <button onclick="location.href='rekapoperasional.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">📲 Rekap Operasional</button>
+      <button onclick="location.href='rekapkeseluruhan.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">💾 Rekap Global Operasional</button>
+      <button onclick="location.href='saxjhxp.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">💻 Rekap SA Sim3lon, Jadwal Harian dan Pengiriman</button>
+      <button onclick="location.href='brimola.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">💸 Brimola Agen dan Pangkalan</button>  
+      <button onclick="location.href='datakaryawan.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">👥 Pos Pembayaran</button>
+      <button onclick="location.href='dbpangkalan.html'" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg shadow transition text-sm">💱Data Pangkalan Harga Refill dan Bagi Hasil</button>
+
+      
+    </div>
+
+    <!-- Aksi Form -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center mb-2">
+      <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm shadow w-full sm:w-auto" onclick="location.href='index.html'">📝 Form Bukti TF Pangkalan</button>
+      <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm shadow w-full sm:w-auto" onclick="location.href='https://i-shipping.pages.dev/masterdataishiping.html'">
+ 🔑 Master Data i-shipping
+      </div>
+    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm shadow w-full sm:w-auto" onclick="location.href='masterrekapdata.html'">
+ 🔑 Master Data Bukti TF Pangkalan
+  </div>
+
+  <script>
+    const id_spreadsheet = localStorage.getItem("id_spreadsheet");
+    const nama_pt = localStorage.getItem("nama_pt");
+    const loggedIn = localStorage.getItem("loggedIn");
+
+    if (loggedIn !== "true" || !id_spreadsheet) {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById("ptName").textContent = nama_pt || "-";
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    function copyLink() {
+      const link = `${window.location.origin}/index.html`;
+      navigator.clipboard.writeText(link).then(() => {
+        const msg = document.getElementById('copy-msg');
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 2000);
+      });
+    }
+
+    setTimeout(() => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
