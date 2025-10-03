@@ -1,65 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grafik Bulanan i-Armada</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>i-Armada | Grafik Perawatan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.12.16/dist/framer-motion.min.js"></script>
+  <style>
+    body { background: #f9fafb; }
+    .card {
+      @apply bg-white rounded-2xl shadow-md p-5 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl;
+    }
+  </style>
 </head>
-<body class="p-4 bg-gray-100">
-  <h2 class="text-xl font-bold mb-4">Grafik Transaksi Bulanan</h2>
-  <canvas id="grafikBulanan" height="120"></canvas>
+<body class="min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
+
+  <!-- 🔹 Header -->
+  <div class="text-center mt-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Grafik Perawatan Armada</h1>
+    <p class="text-gray-600">Pantau biaya perawatan per armada & jenis perawatan setiap bulan</p>
+  </div>
+
+  <!-- 🔹 Filter -->
+  <div class="card w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex flex-col">
+      <label for="selectArmada" class="text-gray-700 font-semibold mb-1">Pilih Armada / Plat Nomor:</label>
+      <select id="selectArmada" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none w-64">
+        <option value="">-- Pilih Armada --</option>
+      </select>
+    </div>
+
+    <button id="btnRefresh" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-md">
+      🔄 Muat Ulang Data
+    </button>
+  </div>
+
+  <!-- 🔹 Grafik -->
+  <div class="card w-full max-w-5xl">
+    <canvas id="grafikPerawatan" height="160"></canvas>
+  </div>
+
+  <!-- 🔹 Info Ringkas -->
+  <div id="info" class="card w-full max-w-4xl text-center text-gray-700 text-sm"></div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbz8d5rR5gF_5W-0wj5z_Nr6S377_9a34IZ5En-hq57ZAsIGMm-xZm9NwBxkMNy9T3eJ/exec";
-    const id_spreadsheet = localStorage.getItem("id_spreadsheet"); // ambil dari login
-    
-    async function loadGrafikBulanan() {
-      try {
-        const res = await fetch(`${scriptURL}?action=getGrafikBulanan&id_spreadsheet=${id_spreadsheet}`);
-        const data = await res.json();
+    const API_URL = "https://script.google.com/macros/s/AKfycbxMZcuDACEQamYEUFeIWVV6HADsxneI8dWpghRuDLy4WM45GMP32ifnplaZB7tXzRDi/exec";
+    const id_spreadsheet = localStorage.getItem("id_spreadsheet");
 
-        const labels = data.map(item => {
-          const [tahun, bulan] = item.bulan.split("-");
-          const namaBulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-          return `${namaBulan[parseInt(bulan) - 1]} ${tahun}`;
-        });
+    const ctx = document.getElementById("grafikPerawatan").getContext("2d");
+    let chart;
 
-        const values = data.map(item => item.total);
+    const warna = {
+      "SERVICE": "#2563eb",
+      "GANTI OLI": "#f59e0b",
+      "GANTI BAN": "#10b981",
+      "GANTI KOPLING": "#8b5cf6",
+      "STNK": "#ef4444",
+      "PAJAK": "#14b8a6",
+      "KIR": "#3b82f6"
+    };
 
-        const ctx = document.getElementById("grafikBulanan").getContext("2d");
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [{
-              label: "Total Transaksi (Rp)",
-              data: values,
-              borderWidth: 2,
-              backgroundColor: "rgba(59,130,246,0.6)",
-              borderColor: "rgba(37,99,235,1)"
-            }]
-          },
-          options: {
-            scales: {
-              y: { beginAtZero: true }
-            },
-            plugins: {
-              legend: { display: true },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => "Rp " + ctx.raw.toLocaleString("id-ID")
-                }
-              }
-            }
-          }
-        });
-      } catch (err) {
-        console.error("Gagal memuat grafik:", err);
-      }
+    async function ambilData() {
+      const res = await fetch(`${API_URL}?id_spreadsheet=${id_spreadsheet}&action=getGrafikBulanan`);
+      return await res.json();
     }
 
-    loadGrafikBulanan();
+    async function init() {
+      const data = await ambilData();
+
+      // 🔹 Ambil daftar armada unik
+      const armadas = new Set();
+      data.forEach(d => Object.keys(d.armada).forEach(a => armadas.add(a)));
+
+      const select = document.getElementById("selectArmada");
+      select.innerHTML = `<option value="">-- Pilih Armada --</option>`;
+      [...armadas].forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener("change", () => tampilGrafik(data, select.value));
+      document.getElementById("btnRefresh").addEventListener("click", () => init());
+
+      // auto tampilkan armada pertama
+      if (armadas.size > 0) tampilGrafik(data, [...armadas][0]);
+    }
+
+    function tampilGrafik(data, armada) {
+      if (!armada) return;
+
+      const labels = data.map(d => d.bulan);
+      const jenisPerawatan = ["SERVICE", "GANTI OLI", "GANTI BAN", "GANTI KOPLING", "STNK", "PAJAK", "KIR"];
+
+      const datasets = jenisPerawatan.map(jenis => ({
+        label: jenis,
+        data: data.map(d => d.armada[armada]?.[jenis] || 0),
+        backgroundColor: warna[jenis] + "aa",
+        borderColor: warna[jenis],
+        borderWidth: 1
+      }));
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "top" },
+            title: { display: true, text: `Grafik Perawatan Armada: ${armada}` }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") }
+            }
+          }
+        }
+      });
+
+      // Update info ringkas
+      const total = data.reduce((sum, d) => {
+        const perArmada = d.armada[armada];
+        if (perArmada) {
+          Object.values(perArmada).forEach(v => sum += v);
+        }
+        return sum;
+      }, 0);
+      document.getElementById("info").innerHTML =
+        `<b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")} (Semua jenis perawatan)`;
+    }
+
+    init();
   </script>
 </body>
 </html>
