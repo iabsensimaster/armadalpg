@@ -19,6 +19,11 @@
       transform: translateY(-4px);
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
+    .tanggal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .5rem 1.5rem;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
@@ -26,7 +31,7 @@
   <!-- 🔹 Header -->
   <div class="text-center mt-4">
     <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Grafik Perawatan Armada</h1>
-    <p class="text-gray-600">Pantau biaya perawatan per armada & jenis perawatan setiap bulan</p>
+    <p class="text-gray-600">Pantau biaya & tanggal perawatan per armada setiap bulan</p>
   </div>
 
   <!-- 🔹 Filter -->
@@ -49,12 +54,11 @@
   </div>
 
   <!-- 🔹 Info Ringkas -->
-  <div id="info" class="card w-full max-w-4xl text-center text-gray-700 text-sm"></div>
+  <div id="info" class="card w-full max-w-4xl text-gray-700 text-sm"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxzIMwbvmewC-xhFAWZSHxkypF9Kcq2_kCw-v2Q-auXhUvWr3qQ3yzC2ThDjwvnRrzJ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyYFQV2GxOs8viaGDtWb--CewlcE_bJUkftxJKvTyeLVVo2yipW9xLMR7FnGzB5CsTk/exec";
     const id_spreadsheet = localStorage.getItem("id_spreadsheet");
-
     const ctx = document.getElementById("grafikPerawatan").getContext("2d");
     let chart;
 
@@ -136,10 +140,7 @@
               ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") },
               grid: { color: "rgba(0,0,0,0.05)" }
             },
-            x: {
-              grid: { display: false },
-              ticks: { font: { weight: "600" } }
-            }
+            x: { grid: { display: false } }
           }
         }
       });
@@ -151,13 +152,16 @@
         return sum;
       }, 0);
 
-      let infoHTML = `<b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")}<br><br>`;
-      infoHTML += `<h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>`;
-      infoHTML += `<ul class="text-sm text-gray-700 space-y-1 text-left mx-auto w-fit">`;
+      let infoHTML = `
+        <div class="text-center mb-4">
+          <b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")}
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>
+        <div class="tanggal-list">
+      `;
 
       jenisPerawatan.forEach(jenis => {
         const tanggalList = [];
-
         data.forEach(d => {
           if (d.tanggalList && d.tanggalList[armada] && d.tanggalList[armada][jenis]) {
             d.tanggalList[armada][jenis].forEach(tgl => tanggalList.push(tgl));
@@ -165,11 +169,16 @@
         });
 
         if (tanggalList.length > 0) {
-          infoHTML += `<li>🛠️ <b>${jenis}</b>: ${tanggalList.join(", ")}</li>`;
+          infoHTML += `
+            <div class="border border-gray-200 rounded-lg p-2 bg-gray-50">
+              <b>${jenis}</b><br>
+              <span class="text-xs text-gray-700">${tanggalList.join(", ")}</span>
+            </div>
+          `;
         }
       });
 
-      infoHTML += `</ul>`;
+      infoHTML += `</div>`;
       document.getElementById("info").innerHTML = infoHTML;
     }
 
