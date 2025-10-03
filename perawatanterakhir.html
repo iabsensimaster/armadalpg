@@ -98,20 +98,29 @@
       return await res.json();
     }
 
-    async function init() {
-      const data = await ambilData();
-      const select = document.getElementById("selectArmada");
+async function init() {
+  const data = await ambilData();
 
-      const armadas = [...new Set(data.map(d => d.armada))];
-      armadas.forEach(a => {
-        const opt = document.createElement("option");
-        opt.value = a;
-        opt.textContent = a;
-        select.appendChild(opt);
-      });
+  // Gunakan Set biar gak ada duplikat
+  const armadas = new Set();
+  data.forEach(d => {
+    const namaArmada = d.armada || d.plat || d.kendaraan;
+    if (namaArmada) armadas.add(namaArmada);
+  });
 
-      select.addEventListener("change", () => tampilData(data, select.value));
-    }
+  const select = document.getElementById("selectArmada");
+  select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
+
+  [...armadas].forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a;
+    opt.textContent = a;
+    select.appendChild(opt);
+  });
+
+  // Event: Tampilkan data saat armada dipilih
+  select.addEventListener("change", () => tampilData(data, select.value));
+}
 
     function tampilData(data, armada) {
       const tbodyTerakhir = document.getElementById("tabelTerakhir");
