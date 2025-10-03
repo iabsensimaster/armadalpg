@@ -98,11 +98,9 @@
 
     async function init() {
       const data = await ambilData();
+
       const armadas = new Set();
-      data.forEach(d => {
-        const namaArmada = d.armada || d.plat || d.kendaraan;
-        if (namaArmada) armadas.add(namaArmada);
-      });
+      data.forEach(d => Object.keys(d.armada).forEach(a => armadas.add(a)));
 
       const select = document.getElementById("selectArmada");
       select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
@@ -113,7 +111,10 @@
         select.appendChild(opt);
       });
 
-      select.addEventListener("change", () => tampilData(data, select.value));
+      select.addEventListener("change", () => tampilGrafik(data, select.value));
+      document.getElementById("btnRefresh").addEventListener("click", () => init());
+
+      tampilGrafik(data, "ALL");
     }
 
     function tampilData(data, armada) {
