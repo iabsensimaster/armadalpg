@@ -147,7 +147,7 @@
       if (!tbodyTerakhir.innerHTML.trim())
         tbodyTerakhir.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-2">Belum ada data perawatan</td></tr>`;
 
-  // 🔹 Pengingat (pakai data jatuh tempo dari backend)
+// 🔹 Pengingat (pakai data jatuh tempo dari backend)
 const pengingatList = dataArmada.filter(d =>
   ["SERVICE", "GANTI OLI", "GANTI BAN", "GANTI KOPLING", "STNK", "PAJAK", "KIR"].includes(d.jenis)
 );
@@ -172,6 +172,8 @@ pengingatList.forEach(p => {
 
 if (!tbodyPengingat.innerHTML.trim())
   tbodyPengingat.innerHTML = `<tr><td colspan="3" class="text-gray-500 text-center py-2">Tidak ada perawatan mendekati jatuh tempo</td></tr>`;
+
+    }
 
     init();
   </script>
