@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>i-Armada | Cek Perawatan</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="config.js"></script>
   <style>
     body {
       background: #f5f7fa;
@@ -90,37 +91,30 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw-s7zgRRZQLW1h62xAMlJ0b_H6sh8pdPmT3_JhANwsckxvcmYeu5pESMzaujeQ1hXW/exec";
-    const id_spreadsheet = localStorage.getItem("id_spreadsheet");
-
     async function ambilData() {
-      const res = await fetch(`${API_URL}?id_spreadsheet=${id_spreadsheet}&action=getPerawatanTerakhir`);
+      const res = await fetch(getAPIUrl("getPerawatanTerakhir"));
       return await res.json();
     }
 
-async function init() {
-  const data = await ambilData();
+    async function init() {
+      const data = await ambilData();
+      const armadas = new Set();
+      data.forEach(d => {
+        const namaArmada = d.armada || d.plat || d.kendaraan;
+        if (namaArmada) armadas.add(namaArmada);
+      });
 
-  // Gunakan Set biar gak ada duplikat
-  const armadas = new Set();
-  data.forEach(d => {
-    const namaArmada = d.armada || d.plat || d.kendaraan;
-    if (namaArmada) armadas.add(namaArmada);
-  });
+      const select = document.getElementById("selectArmada");
+      select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
+      [...armadas].forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        select.appendChild(opt);
+      });
 
-  const select = document.getElementById("selectArmada");
-  select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
-
-  [...armadas].forEach(a => {
-    const opt = document.createElement("option");
-    opt.value = a;
-    opt.textContent = a;
-    select.appendChild(opt);
-  });
-
-  // Event: Tampilkan data saat armada dipilih
-  select.addEventListener("change", () => tampilData(data, select.value));
-}
+      select.addEventListener("change", () => tampilData(data, select.value));
+    }
 
     function tampilData(data, armada) {
       const tbodyTerakhir = document.getElementById("tabelTerakhir");
@@ -134,7 +128,7 @@ async function init() {
         return;
       }
 
-      const dataArmada = data.filter(d => d.armada === armada);
+      const dataArmada = armada === "ALL" ? data : data.filter(d => d.armada === armada);
       const jenisList = ["SERVICE", "GANTI OLI", "GANTI BAN", "GANTI KOPLING", "STNK", "PAJAK", "KIR"];
 
       // 🔹 Perawatan terakhir
