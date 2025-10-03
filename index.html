@@ -59,7 +59,7 @@
       <div 
         <label for="buktiCash" class="block text-gray-700 font-medium mb-1">Bukti Foto Perawatan</label>
         <input type="file" accept="image/*" id="buktiCash" class="hidden" />
-        <label for="buktiCash" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-block text-sm">Upload Bukti Bukti Foto Perawatan</label>
+        <label for="buktiCash" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-block text-sm">Upload Foto </label>
         <img id="previewBukti" class="w-full max-h-60 object-cover rounded-lg border mt-2 hidden" />
       </div>
 
@@ -173,8 +173,8 @@
       const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
       if (!fotoFile) return alert("❌ Foto nota wajib diunggah.");
 
-      const buktiFile = buktiInput.files[0] : null;
-      if (!buktiFile) return alert("❌ Bukti Cash wajib diunggah.");
+      const buktiFile = buktiInput.files[0];
+      if (!buktiFile) return alert("❌ Bukti Foto Perawatan wajib diunggah.");
 
       const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
