@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { background: #f9fafb; }
+    body { background: #f9fafb; font-family: 'Inter', sans-serif; }
     .card {
       background: white;
       border-radius: 1rem;
@@ -21,8 +21,8 @@
     }
     .tanggal-list {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .5rem 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .75rem;
     }
   </style>
 </head>
@@ -31,7 +31,7 @@
   <!-- 🔹 Header -->
   <div class="text-center mt-4">
     <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Grafik Perawatan Armada</h1>
-    <p class="text-gray-600">Pantau biaya & tanggal perawatan per armada setiap bulan</p>
+    <p class="text-gray-600">Pantau biaya & tanggal perawatan tiap armada atau gabungan seluruh armada</p>
   </div>
 
   <!-- 🔹 Filter -->
@@ -39,7 +39,7 @@
     <div class="flex flex-col">
       <label for="selectArmada" class="text-gray-700 font-semibold mb-1">Pilih Armada / Plat Nomor:</label>
       <select id="selectArmada" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none w-64">
-        <option value="">-- Pilih Armada --</option>
+        <option value="ALL">🚚 Semua Armada</option>
       </select>
     </div>
 
@@ -54,7 +54,7 @@
   </div>
 
   <!-- 🔹 Info Ringkas -->
-  <div id="info" class="card w-full max-w-4xl text-gray-700 text-sm"></div>
+  <div id="info" class="card w-full max-w-5xl text-gray-700 text-sm"></div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyYFQV2GxOs8viaGDtWb--CewlcE_bJUkftxJKvTyeLVVo2yipW9xLMR7FnGzB5CsTk/exec";
@@ -80,12 +80,11 @@
     async function init() {
       const data = await ambilData();
 
-      // 🔹 Ambil daftar armada unik
       const armadas = new Set();
       data.forEach(d => Object.keys(d.armada).forEach(a => armadas.add(a)));
 
       const select = document.getElementById("selectArmada");
-      select.innerHTML = `<option value="">-- Pilih Armada --</option>`;
+      select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
       [...armadas].forEach(a => {
         const opt = document.createElement("option");
         opt.value = a;
@@ -96,23 +95,29 @@
       select.addEventListener("change", () => tampilGrafik(data, select.value));
       document.getElementById("btnRefresh").addEventListener("click", () => init());
 
-      // Auto tampilkan armada pertama
-      if (armadas.size > 0) tampilGrafik(data, [...armadas][0]);
+      tampilGrafik(data, "ALL"); // tampil default semua armada
     }
 
     function tampilGrafik(data, armada) {
-      if (!armada) return;
-
-      const labels = data.map(d => d.bulan);
       const jenisPerawatan = ["SERVICE", "GANTI OLI", "GANTI BAN", "GANTI KOPLING", "STNK", "PAJAK", "KIR"];
+      const labels = data.map(d => d.bulan);
 
-      const datasets = jenisPerawatan.map(jenis => ({
-        label: jenis,
-        data: data.map(d => d.armada[armada]?.[jenis] || 0),
-        backgroundColor: warna[jenis] + "cc",
-        borderColor: warna[jenis],
-        borderWidth: 1
-      }));
+      // 🔹 Gabungkan semua armada jika "ALL"
+      const datasets = jenisPerawatan.map(jenis => {
+        const nilai = data.map(d => {
+          if (armada === "ALL") {
+            return Object.values(d.armada).reduce((sum, a) => sum + (a[jenis] || 0), 0);
+          }
+          return d.armada[armada]?.[jenis] || 0;
+        });
+        return {
+          label: jenis,
+          data: nilai,
+          backgroundColor: warna[jenis] + "cc",
+          borderColor: warna[jenis],
+          borderWidth: 1
+        };
+      });
 
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
@@ -125,7 +130,7 @@
             legend: { position: "top" },
             title: {
               display: true,
-              text: `Grafik Perawatan Armada: ${armada}`,
+              text: armada === "ALL" ? "Grafik Perawatan: Semua Armada" : `Grafik Perawatan Armada: ${armada}`,
               font: { size: 18, weight: "bold" }
             },
             tooltip: {
@@ -145,34 +150,55 @@
         }
       });
 
-      // 🔹 Update info ringkas + tanggal perawatan
-      const total = data.reduce((sum, d) => {
-        const perArmada = d.armada[armada];
-        if (perArmada) Object.values(perArmada).forEach(v => sum += v);
-        return sum;
-      }, 0);
+      // 🔹 Info total dan tanggal
+      let total = 0;
+      let infoHTML = "";
 
-      let infoHTML = `
+      const allTanggal = {};
+
+      data.forEach(d => {
+        if (armada === "ALL") {
+          Object.keys(d.tanggalList || {}).forEach(a => {
+            Object.keys(d.tanggalList[a] || {}).forEach(jenis => {
+              d.tanggalList[a][jenis].forEach(tgl => {
+                allTanggal[jenis] = allTanggal[jenis] || new Set();
+                allTanggal[jenis].add(`${a}: ${tgl}`);
+              });
+            });
+          });
+        } else {
+          Object.keys(d.tanggalList?.[armada] || {}).forEach(jenis => {
+            d.tanggalList[armada][jenis].forEach(tgl => {
+              allTanggal[jenis] = allTanggal[jenis] || new Set();
+              allTanggal[jenis].add(tgl);
+            });
+          });
+        }
+
+        // Hitung total biaya
+        if (armada === "ALL") {
+          Object.values(d.armada).forEach(obj => Object.values(obj).forEach(v => total += v));
+        } else {
+          const perArmada = d.armada[armada];
+          if (perArmada) Object.values(perArmada).forEach(v => total += v);
+        }
+      });
+
+      infoHTML += `
         <div class="text-center mb-4">
-          <b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")}
+          <b>Total Biaya ${armada === "ALL" ? "Semua Armada" : armada}</b>: Rp ${total.toLocaleString("id-ID")}
         </div>
-        <h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>
+        <h3 class="font-semibold text-gray-800 mb-2 text-center">📅 Rincian Tanggal Perawatan (${armada === "ALL" ? "Semua Armada" : armada})</h3>
         <div class="tanggal-list">
       `;
 
-      jenisPerawatan.forEach(jenis => {
-        const tanggalList = [];
-        data.forEach(d => {
-          if (d.tanggalList && d.tanggalList[armada] && d.tanggalList[armada][jenis]) {
-            d.tanggalList[armada][jenis].forEach(tgl => tanggalList.push(tgl));
-          }
-        });
-
-        if (tanggalList.length > 0) {
+      Object.keys(allTanggal).forEach(jenis => {
+        const list = [...allTanggal[jenis]];
+        if (list.length > 0) {
           infoHTML += `
             <div class="border border-gray-200 rounded-lg p-2 bg-gray-50">
               <b>${jenis}</b><br>
-              <span class="text-xs text-gray-700">${tanggalList.join(", ")}</span>
+              <span class="text-xs text-gray-700">${list.join(", ")}</span>
             </div>
           `;
         }
