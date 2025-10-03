@@ -147,25 +147,31 @@
       if (!tbodyTerakhir.innerHTML.trim())
         tbodyTerakhir.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-2">Belum ada data perawatan</td></tr>`;
 
-      // 🔹 Pengingat (STNK, PAJAK, KIR)
-      const today = new Date();
-      const pengingatList = dataArmada.filter(d => ["STNK","PAJAK","KIR"].includes(d.jenis));
-      pengingatList.forEach(p => {
-        const tgl = new Date(p.tanggal);
-        const diff = Math.ceil((tgl - today) / (1000 * 60 * 60 * 24));
-        if (diff <= 30 && diff >= 0) {
-          const warna = diff <= 7 ? 'bg-red-100 text-red-700' : diff <= 15 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
-          tbodyPengingat.innerHTML += `
-            <tr class="${warna}">
-              <td class="font-medium">${p.jenis}</td>
-              <td>${p.tanggal}</td>
-              <td>${diff} hari lagi</td>
-            </tr>`;
-        }
-      });
-      if (!tbodyPengingat.innerHTML.trim())
-        tbodyPengingat.innerHTML = `<tr><td colspan="3" class="text-gray-500 text-center py-2">Tidak ada perawatan mendekati jatuh tempo</td></tr>`;
-    }
+  // 🔹 Pengingat (pakai data jatuh tempo dari backend)
+const pengingatList = dataArmada.filter(d =>
+  ["SERVICE", "GANTI OLI", "GANTI BAN", "GANTI KOPLING", "STNK", "PAJAK", "KIR"].includes(d.jenis)
+);
+
+pengingatList.forEach(p => {
+  const diff = Number(p.sisaHari);
+  if (diff <= 30 && diff >= 0) {
+    const warna =
+      diff <= 7
+        ? 'bg-red-100 text-red-700'
+        : diff <= 15
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-green-100 text-green-700';
+    tbodyPengingat.innerHTML += `
+      <tr class="${warna}">
+        <td class="font-medium">${p.jenis}</td>
+        <td>${p.jatuhTempo}</td>
+        <td>${diff} hari lagi</td>
+      </tr>`;
+  }
+});
+
+if (!tbodyPengingat.innerHTML.trim())
+  tbodyPengingat.innerHTML = `<tr><td colspan="3" class="text-gray-500 text-center py-2">Tidak ada perawatan mendekati jatuh tempo</td></tr>`;
 
     init();
   </script>
