@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grafik Bulanan i-Armada</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="p-4 bg-gray-100">
+  <h2 class="text-xl font-bold mb-4">Grafik Transaksi Bulanan</h2>
+  <canvas id="grafikBulanan" height="120"></canvas>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz8d5rR5gF_5W-0wj5z_Nr6S377_9a34IZ5En-hq57ZAsIGMm-xZm9NwBxkMNy9T3eJ/exec";
+    const id_spreadsheet = localStorage.getItem("id_spreadsheet"); // ambil dari login
+    
+    async function loadGrafikBulanan() {
+      try {
+        const res = await fetch(`${scriptURL}?action=getGrafikBulanan&id_spreadsheet=${id_spreadsheet}`);
+        const data = await res.json();
+
+        const labels = data.map(item => {
+          const [tahun, bulan] = item.bulan.split("-");
+          const namaBulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+          return `${namaBulan[parseInt(bulan) - 1]} ${tahun}`;
+        });
+
+        const values = data.map(item => item.total);
+
+        const ctx = document.getElementById("grafikBulanan").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Total Transaksi (Rp)",
+              data: values,
+              borderWidth: 2,
+              backgroundColor: "rgba(59,130,246,0.6)",
+              borderColor: "rgba(37,99,235,1)"
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: true }
+            },
+            plugins: {
+              legend: { display: true },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => "Rp " + ctx.raw.toLocaleString("id-ID")
+                }
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Gagal memuat grafik:", err);
+      }
+    }
+
+    loadGrafikBulanan();
+  </script>
+</body>
+</html>
