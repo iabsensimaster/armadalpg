@@ -17,12 +17,12 @@
     <form id="ledgerForm" class="space-y-4 text-sm">
       
       <div>
-        <label for="nama" class="block text-gray-700 font-medium mb-1">Keterangan Pembayaran</label>
+        <label for="nama" class="block text-gray-700 font-medium mb-1">Keterangan Pembayaran Perawatan</label>
         <select id="nama" required class="w-full border border-gray-300 rounded-lg shadow-sm p-2.5 text-sm"></select>
       </div>
 
       <div>
-        <label for="uraian" class="block text-gray-700 font-medium mb-1">Nama Pangkalan</label>
+        <label for="uraian" class="block text-gray-700 font-medium mb-1">Nopol Armada</label>
         <input list="uraianList" id="uraian" required class="w-full border border-gray-300 rounded-lg shadow-sm p-2.5" />
         <datalist id="uraianList"></datalist>
       </div>
@@ -38,7 +38,7 @@
       </div>
 
       <div>
-        <label class="block text-gray-700 font-medium mb-1">Bukti Cash</label>
+        <label class="block text-gray-700 font-medium mb-1">Bukti Pembayaran</label>
         <input type="file" accept="image/*" id="fotoNotaUpload" class="hidden" />
         <input type="file" accept="image/*" capture="environment" id="fotoNotaCamera" class="hidden" />
         <div class="flex space-x-2">
@@ -56,10 +56,10 @@
         </select>
       </div>
 
-      <div id="buktiCashContainer" class="hidden">
-        <label for="buktiCash" class="block text-gray-700 font-medium mb-1">Bukti Cash</label>
+      <div 
+        <label for="buktiCash" class="block text-gray-700 font-medium mb-1">Bukti Foto Perawatan</label>
         <input type="file" accept="image/*" id="buktiCash" class="hidden" />
-        <label for="buktiCash" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-block text-sm">Upload Bukti Serah Terima Pembayaran</label>
+        <label for="buktiCash" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-block text-sm">Upload Bukti Bukti Foto Perawatan</label>
         <img id="previewBukti" class="w-full max-h-60 object-cover rounded-lg border mt-2 hidden" />
       </div>
 
@@ -173,8 +173,8 @@
       const fotoFile = fotoUpload.files[0] || fotoCamera.files[0];
       if (!fotoFile) return alert("❌ Foto nota wajib diunggah.");
 
-      const buktiFile = pembayaranVal === "Cash" ? buktiInput.files[0] : null;
-      if (pembayaranVal === "Cash" && !buktiFile) return alert("❌ Bukti Cash wajib diunggah.");
+      const buktiFile = buktiInput.files[0] : null;
+      if (!buktiFile) return alert("❌ Bukti Cash wajib diunggah.");
 
       const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
