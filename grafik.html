@@ -28,6 +28,14 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
 
+  <!-- 🔹 Tombol ke Dashboard -->
+  <div class="w-full max-w-5xl flex justify-start">
+    <button onclick="window.location.href='dashboard.html'"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-md transition">
+      ⬅ Kembali ke Dashboard
+    </button>
+  </div>
+
   <!-- 🔹 Header -->
   <div class="text-center mt-4">
     <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Grafik Perawatan Armada</h1>
@@ -63,13 +71,13 @@
     let chart;
 
     const warna = {
-    "SERVICE": "#2563eb",      // biru
-    "GANTI OLI": "#f59e0b",    // oranye
-    "GANTI BAN": "#10b981",    // hijau
-    "GANTI KOPLING": "#8b5cf6",// ungu
-    "STNK": "#ef4444",         // merah
-    "PAJAK": "#000000",        // 🖤 hitam
-    "KIR": "#ec4899"           // 💗 pink
+      "SERVICE": "#2563eb",      // biru
+      "GANTI OLI": "#f59e0b",    // oranye
+      "GANTI BAN": "#10b981",    // hijau
+      "GANTI KOPLING": "#8b5cf6",// ungu
+      "STNK": "#ef4444",         // merah
+      "PAJAK": "#000000",        // 🖤 hitam
+      "KIR": "#ec4899"           // 💗 pink
     };
 
     async function ambilData() {
@@ -153,7 +161,6 @@
       // 🔹 Info total dan tanggal
       let total = 0;
       let infoHTML = "";
-
       const allTanggal = {};
 
       data.forEach(d => {
