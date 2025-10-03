@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kelola Pangkalan</title>
+  <title>Kelola Data Kendaraan</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-cyan-100 to-blue-200 min-h-screen p-2 sm:p-4">
@@ -15,13 +15,13 @@
 
     <!-- Input -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-      <input id="uraianInput" placeholder="Nama Pangkalan" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="uraianInput" placeholder="Nopol" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
       <input id="posInput" placeholder="Nama PT" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
-      <input id="doyangdimilikiInput" placeholder="DO yang dimiliki" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
-      <input id="hargarefillInput" placeholder="Harga Refill" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
-      <input id="hargabagihasilInput" placeholder="Harga Bagi Hasil" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
-      <input id="id_brimola" placeholder="ID Brimola" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
-      <input id="password" placeholder="Password" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="doyangdimilikiInput" placeholder="Alias" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="hargarefillInput" placeholder="Jenis" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="hargabagihasilInput" placeholder="Tahun" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="id_brimola" placeholder="No. Rangka" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
+      <input id="password" placeholder="No. Mesin" class="border border-gray-300 rounded-md px-3 py-2 w-full" />
       <button onclick="tambahPos()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 col-span-1">Tambah</button>
     </div>
 
@@ -31,13 +31,13 @@
         <thead class="bg-blue-600 text-white">
           <tr>
             <th class="p-3">No.</th>
-            <th class="p-3">Nama Pangkalan</th>
+            <th class="p-3">Nopol</th>
             <th class="p-3">Nama PT</th>
-            <th class="p-3">DO yang dimiliki</th>
-            <th class="p-3">Harga Refill</th>
-            <th class="p-3">Harga Bagi Hasil</th>
-            <th class="p-3">ID Brimola</th>
-            <th class="p-3">Password</th>
+            <th class="p-3">Alias</th>
+            <th class="p-3">Jenis</th>
+            <th class="p-3">Tahun</th>
+            <th class="p-3">No. Rangka</th>
+            <th class="p-3">No. Mesin</th>
             <th class="p-3">Aksi</th>
           </tr>
         </thead>
