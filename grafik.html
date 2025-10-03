@@ -131,10 +131,39 @@
             y: {
               beginAtZero: true,
               ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") }
+
+
+      // 🔹 Tambahkan daftar tanggal perawatan di bawah grafik
+  let detailHTML = `<div class="mt-4 text-left">
+    <h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>
+    <ul class="text-sm text-gray-700 space-y-1">`;
+
+  jenisPerawatan.forEach(jenis => {
+    const tanggalList = [];
+
+    data.forEach(d => {
+      if (d.armada[armada] && d.armada[armada][jenis]) {
+        // Ambil tanggal asli transaksi dari data (kalau disediakan Apps Script)
+        if (d.tanggalList && d.tanggalList[armada] && d.tanggalList[armada][jenis]) {
+          d.tanggalList[armada][jenis].forEach(tgl => tanggalList.push(tgl));
+        }
+      }
+    });
+
+    if (tanggalList.length > 0) {
+      detailHTML += `<li><b>${jenis}</b> → ${tanggalList.join(", ")}</li>`;
+    }
+  });
+
+  detailHTML += `</ul></div>`;
+  document.getElementById("info").innerHTML += detailHTML;
+
             }
           }
         }
       });
+
+      
 
       // Update info ringkas
       const total = data.reduce((sum, d) => {
