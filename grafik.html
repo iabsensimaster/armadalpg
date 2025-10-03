@@ -19,9 +19,6 @@
       transform: translateY(-4px);
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-    canvas {
-      transition: opacity 0.6s ease;
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
@@ -95,7 +92,7 @@
       select.addEventListener("change", () => tampilGrafik(data, select.value));
       document.getElementById("btnRefresh").addEventListener("click", () => init());
 
-      // auto tampilkan armada pertama
+      // Auto tampilkan armada pertama
       if (armadas.size > 0) tampilGrafik(data, [...armadas][0]);
     }
 
@@ -108,7 +105,7 @@
       const datasets = jenisPerawatan.map(jenis => ({
         label: jenis,
         data: data.map(d => d.armada[armada]?.[jenis] || 0),
-        backgroundColor: warna[jenis] + "aa",
+        backgroundColor: warna[jenis] + "cc",
         borderColor: warna[jenis],
         borderWidth: 1
       }));
@@ -119,60 +116,61 @@
         data: { labels, datasets },
         options: {
           responsive: true,
-          animation: {
-            duration: 1200,
-            easing: "easeOutQuart"
-          },
+          animation: { duration: 1200, easing: "easeOutQuart" },
           plugins: {
             legend: { position: "top" },
-            title: { display: true, text: `Grafik Perawatan Armada: ${armada}` }
+            title: {
+              display: true,
+              text: `Grafik Perawatan Armada: ${armada}`,
+              font: { size: 18, weight: "bold" }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: Rp ${ctx.parsed.y.toLocaleString("id-ID")}`
+              }
+            }
           },
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") }
-
-
-      // 🔹 Tambahkan daftar tanggal perawatan di bawah grafik
-  let detailHTML = `<div class="mt-4 text-left">
-    <h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>
-    <ul class="text-sm text-gray-700 space-y-1">`;
-
-  jenisPerawatan.forEach(jenis => {
-    const tanggalList = [];
-
-    data.forEach(d => {
-      if (d.armada[armada] && d.armada[armada][jenis]) {
-        // Ambil tanggal asli transaksi dari data (kalau disediakan Apps Script)
-        if (d.tanggalList && d.tanggalList[armada] && d.tanggalList[armada][jenis]) {
-          d.tanggalList[armada][jenis].forEach(tgl => tanggalList.push(tgl));
-        }
-      }
-    });
-
-    if (tanggalList.length > 0) {
-      detailHTML += `<li><b>${jenis}</b> → ${tanggalList.join(", ")}</li>`;
-    }
-  });
-
-  detailHTML += `</ul></div>`;
-  document.getElementById("info").innerHTML += detailHTML;
-
+              ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") },
+              grid: { color: "rgba(0,0,0,0.05)" }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { weight: "600" } }
             }
           }
         }
       });
 
-      
-
-      // Update info ringkas
+      // 🔹 Update info ringkas + tanggal perawatan
       const total = data.reduce((sum, d) => {
         const perArmada = d.armada[armada];
         if (perArmada) Object.values(perArmada).forEach(v => sum += v);
         return sum;
       }, 0);
-      document.getElementById("info").innerHTML =
-        `<b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")} (Semua jenis perawatan)`;
+
+      let infoHTML = `<b>Total Biaya ${armada}</b>: Rp ${total.toLocaleString("id-ID")}<br><br>`;
+      infoHTML += `<h3 class="font-semibold text-gray-800 mb-2">📅 Rincian Tanggal Perawatan (${armada})</h3>`;
+      infoHTML += `<ul class="text-sm text-gray-700 space-y-1 text-left mx-auto w-fit">`;
+
+      jenisPerawatan.forEach(jenis => {
+        const tanggalList = [];
+
+        data.forEach(d => {
+          if (d.tanggalList && d.tanggalList[armada] && d.tanggalList[armada][jenis]) {
+            d.tanggalList[armada][jenis].forEach(tgl => tanggalList.push(tgl));
+          }
+        });
+
+        if (tanggalList.length > 0) {
+          infoHTML += `<li>🛠️ <b>${jenis}</b>: ${tanggalList.join(", ")}</li>`;
+        }
+      });
+
+      infoHTML += `</ul>`;
+      document.getElementById("info").innerHTML = infoHTML;
     }
 
     init();
