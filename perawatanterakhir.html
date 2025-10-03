@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -98,9 +99,11 @@
 
     async function init() {
       const data = await ambilData();
-
       const armadas = new Set();
-      data.forEach(d => Object.keys(d.armada).forEach(a => armadas.add(a)));
+      data.forEach(d => {
+        const namaArmada = d.armada || d.plat || d.kendaraan;
+        if (namaArmada) armadas.add(namaArmada);
+      });
 
       const select = document.getElementById("selectArmada");
       select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
@@ -111,10 +114,7 @@
         select.appendChild(opt);
       });
 
-      select.addEventListener("change", () => tampilGrafik(data, select.value));
-      document.getElementById("btnRefresh").addEventListener("click", () => init());
-
-      tampilGrafik(data, "ALL");
+      select.addEventListener("change", () => tampilData(data, select.value));
     }
 
     function tampilData(data, armada) {
