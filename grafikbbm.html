@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>i-Armada | Grafik Perawatan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="config.js"></script>
+  <style>
+    body { background: #f9fafb; font-family: 'Inter', sans-serif; }
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .tanggal-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: .75rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
+  <div class="w-full max-w-5xl flex justify-start">
+ <a href="dashboard.html" class="absolute top-4 right-4 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg shadow-md transition">Dashboard</a>
+
+    </button>
+  </div>
+
+  <!-- 🔹 Header -->
+  <div class="text-center mt-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 Grafik Perawatan Armada</h1>
+    <p class="text-gray-600">Pantau biaya & tanggal perawatan Armada</p>
+  </div>
+
+  <!-- 🔹 Filter -->
+  <div class="card w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex flex-col">
+      <label for="selectArmada" class="text-gray-700 font-semibold mb-1">Pilih Armada / Plat Nomor:</label>
+      <select id="selectArmada" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none w-64">
+        <option value="ALL">🚚 Semua Armada</option>
+      </select>
+    </div>
+
+    <button id="btnRefresh" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-md">
+      🔄 Muat Ulang Data
+    </button>
+  </div>
+
+  <!-- 🔹 Grafik -->
+  <div class="card w-full max-w-5xl">
+    <canvas id="grafikPerawatan" height="160"></canvas>
+  </div>
+
+  <!-- 🔹 Info Ringkas -->
+  <div id="info" class="card w-full max-w-5xl text-gray-700 text-sm"></div>
+
+  <script>
+    const ctx = document.getElementById("grafikPerawatan").getContext("2d");
+    let chart;
+
+    const warna = {
+      "SOLAR":  "#f59e0b",    // oranye
+      "PERTAMINA DEX": "#ef4444",         // merah
+      "DEXLITE": "#8b5cf6",// ungu
+      "PERTALITE": "#10b981",    // hijau
+      "PERTAMAX": "#2563eb",      // biru
+    };
+
+    async function ambilData() {
+      const res = await fetch(getAPIUrl("getGrafikBulanan"));
+      return await res.json();
+    }
+
+    async function init() {
+      const data = await ambilData();
+
+      const armadas = new Set();
+      data.forEach(d => Object.keys(d.armada).forEach(a => armadas.add(a)));
+
+      const select = document.getElementById("selectArmada");
+      select.innerHTML = `<option value="ALL">🚚 Semua Armada</option>`;
+      [...armadas].forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener("change", () => tampilGrafik(data, select.value));
+      document.getElementById("btnRefresh").addEventListener("click", () => init());
+
+      tampilGrafik(data, "ALL");
+    }
+
+    function tampilGrafik(data, armada) {
+      const jenisPerawatan = ["SOLAR", "PERTAMINA DEX", "DEXLITE", "PERTALITE", "PERTAMAX"];
+      const labels = data.map(d => d.bulan);
+
+      // 🔹 Dataset berdasarkan jenis
+      const datasets = jenisPerawatan.map(jenis => {
+        const nilai = data.map(d => {
+          if (armada === "ALL") {
+            return Object.values(d.armada).reduce((sum, a) => sum + (a[jenis] || 0), 0);
+          }
+          return d.armada[armada]?.[jenis] || 0;
+        });
+        return {
+          label: jenis,
+          data: nilai,
+          backgroundColor: warna[jenis] + "cc",
+          borderColor: warna[jenis],
+          borderWidth: 1
+        };
+      });
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          animation: { duration: 1200, easing: "easeOutQuart" },
+          plugins: {
+            legend: { position: "top" },
+            title: {
+              display: true,
+              text: armada === "ALL" ? "Grafik Perawatan: Semua Armada" : `Grafik Perawatan Armada: ${armada}`,
+              font: { size: 18, weight: "bold" }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: Rp ${ctx.parsed.y.toLocaleString("id-ID")}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => "Rp " + v.toLocaleString("id-ID") },
+              grid: { color: "rgba(0,0,0,0.05)" }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // 🔹 Ringkasan total & tanggal
+      tampilInfo(data, armada);
+    }
+
+    function tampilInfo(data, armada) {
+      let total = 0;
+      let infoHTML = "";
+      const allTanggal = {};
+
+      data.forEach(d => {
+        if (armada === "ALL") {
+          Object.keys(d.tanggalList || {}).forEach(a => {
+            Object.keys(d.tanggalList[a] || {}).forEach(jenis => {
+              d.tanggalList[a][jenis].forEach(tgl => {
+                allTanggal[jenis] = allTanggal[jenis] || new Set();
+                allTanggal[jenis].add(`${a}: ${tgl}`);
+              });
+            });
+          });
+        } else {
+          Object.keys(d.tanggalList?.[armada] || {}).forEach(jenis => {
+            d.tanggalList[armada][jenis].forEach(tgl => {
+              allTanggal[jenis] = allTanggal[jenis] || new Set();
+              allTanggal[jenis].add(tgl);
+            });
+          });
+        }
+
+        // Hitung total biaya
+        if (armada === "ALL") {
+          Object.values(d.armada).forEach(obj => Object.values(obj).forEach(v => total += v));
+        } else {
+          const perArmada = d.armada[armada];
+          if (perArmada) Object.values(perArmada).forEach(v => total += v);
+        }
+      });
+
+      infoHTML += `
+        <div class="text-center mb-4">
+          <b>Total Biaya ${armada === "ALL" ? "Semua Armada" : armada}</b>: Rp ${total.toLocaleString("id-ID")}
+        </div>
+        <h3 class="font-semibold text-gray-800 mb-2 text-center">📅 Rincian Tanggal Perawatan (${armada === "ALL" ? "Semua Armada" : armada})</h3>
+        <div class="tanggal-list">
+      `;
+
+      Object.keys(allTanggal).forEach(jenis => {
+        const list = [...allTanggal[jenis]];
+        if (list.length > 0) {
+          infoHTML += `
+            <div class="border border-gray-200 rounded-lg p-2 bg-gray-50">
+              <b>${jenis}</b><br>
+              <span class="text-xs text-gray-700">${list.join(", ")}</span>
+            </div>
+          `;
+        }
+      });
+
+      infoHTML += `</div>`;
+      document.getElementById("info").innerHTML = infoHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>
